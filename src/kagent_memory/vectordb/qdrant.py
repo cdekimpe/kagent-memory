@@ -2,8 +2,7 @@
 
 import logging
 import uuid
-from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any
 
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as qdrant_models
@@ -189,11 +188,9 @@ class QdrantVectorStore(VectorStore):
         """
         if ids:
             logger.debug(f"Deleting {len(ids)} points by ID from {self.collection_name}")
-            # Cast to the expected type for PointIdsList
-            point_ids: Sequence[int | str] = cast(Sequence[int | str], ids)
             await self._client.delete(
                 collection_name=self.collection_name,
-                points_selector=qdrant_models.PointIdsList(points=point_ids),
+                points_selector=qdrant_models.PointIdsList(points=list(ids)),
             )
             return len(ids)
         elif filters:
