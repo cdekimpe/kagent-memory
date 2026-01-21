@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kagent-memory.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kagent-memory.labels" . | nindent 4 }}
+data:
+  KAGENT_MEMORY_LOG_LEVEL: {{ .Values.logLevel | quote }}
+  KAGENT_MEMORY_QDRANT_URL: {{ include "kagent-memory.qdrantUrl" . | quote }}
+  KAGENT_MEMORY_QDRANT_COLLECTION: {{ .Values.memory.qdrant.collectionName | quote }}
+  KAGENT_MEMORY_QDRANT_TOP_K: {{ .Values.memory.qdrant.topK | quote }}
+  KAGENT_MEMORY_QDRANT_SCORE_THRESHOLD: {{ .Values.memory.qdrant.scoreThreshold | quote }}
+  KAGENT_MEMORY_EMBEDDING_MODEL: {{ .Values.memory.embedding.model | quote }}
+  KAGENT_MEMORY_EMBEDDING_DIMENSIONS: {{ .Values.memory.embedding.dimensions | quote }}
+  KAGENT_MEMORY_CHUNK_SIZE: {{ .Values.memory.chunking.chunkSize | quote }}
+  KAGENT_MEMORY_CHUNK_OVERLAP: {{ .Values.memory.chunking.chunkOverlap | quote }}

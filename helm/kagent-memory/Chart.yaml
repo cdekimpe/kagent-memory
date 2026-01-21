@@ -1,0 +1,24 @@
+apiVersion: v2
+name: kagent-memory
+description: Long-term memory service for Kagent platform using Vector DB and OpenAI embeddings
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - kagent
+  - memory
+  - vector-database
+  - qdrant
+  - openai
+  - ai-agents
+home: https://github.com/cdekimpe/kagent-memory
+maintainers:
+  - name: Corentin Dekimpe
+    email: corentin@dekimpe.dev
+sources:
+  - https://github.com/cdekimpe/kagent-memory
+dependencies:
+  - name: qdrant
+    version: "0.8.4"
+    repository: https://qdrant.github.io/qdrant-helm
+    condition: qdrant.enabled

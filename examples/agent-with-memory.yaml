@@ -1,0 +1,98 @@
+# Example: Kagent Agent using kagent-memory for long-term memory
+# This shows how an agent can integrate with the kagent-memory service
+
+# Prerequisites:
+# 1. kagent-memory is deployed in the kagent namespace
+# 2. OpenAI secret exists with API key
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-secret
+  namespace: kagent
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "sk-your-api-key-here"
+
+---
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: gpt4-config
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: gpt-4o
+  apiKeySecret: openai-secret
+  apiKeySecretKey: OPENAI_API_KEY
+
+---
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: memory-enabled-agent
+  namespace: kagent
+spec:
+  description: An agent with long-term memory capabilities
+  type: Declarative
+  declarative:
+    systemMessage: |
+      You are a helpful assistant with access to long-term memory.
+
+      When the user shares important information about themselves or their preferences,
+      you should remember it for future conversations.
+
+      Before responding, check your memory for relevant context about the user.
+
+    modelConfig: gpt4-config
+    stream: true
+
+    # Agent can call kagent-memory service via HTTP
+    # Example tool configuration (if using MCP):
+    # tools:
+    # - type: McpServer
+    #   mcpServer:
+    #     name: kagent-memory
+    #     kind: RemoteMCPServer
+    #     apiGroup: kagent.dev
+
+    deployment:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+
+---
+# Example Python code for agents to use kagent-memory:
+#
+# import httpx
+#
+# MEMORY_URL = "http://kagent-memory.kagent:8080"
+#
+# async def save_memory(content: str, user_id: str, session_id: str):
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(
+#             f"{MEMORY_URL}/api/memory",
+#             json={
+#                 "content": content,
+#                 "user_id": user_id,
+#                 "session_id": session_id,
+#             }
+#         )
+#         return response.json()
+#
+# async def search_memory(query: str, user_id: str, top_k: int = 5):
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(
+#             f"{MEMORY_URL}/api/memory/search",
+#             json={
+#                 "query": query,
+#                 "user_id": user_id,
+#                 "top_k": top_k,
+#             }
+#         )
+#         return response.json()

@@ -1,0 +1,105 @@
+# Default values for kagent-memory
+
+replicaCount: 1
+
+image:
+  registry: ghcr.io
+  repository: cdekimpe/kagent-memory
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Memory service configuration
+memory:
+  # Qdrant configuration
+  qdrant:
+    # URL for Qdrant server
+    # If empty and qdrant.enabled=true, auto-computes to embedded chart URL
+    # If qdrant.enabled=false, set this to external Qdrant URL
+    url: ""
+    # Collection name for storing memories
+    collectionName: "kagent-memories"
+    # Number of results to return by default
+    topK: 10
+    # Score threshold for filtering results (0.0-1.0)
+    scoreThreshold: 0.7
+
+  # Embedding configuration
+  embedding:
+    # OpenAI embedding model to use
+    model: "text-embedding-3-small"
+    # Embedding dimensions (1536 for small, 3072 for large)
+    dimensions: 1536
+
+  # Text chunking configuration
+  chunking:
+    # Chunk size in characters
+    chunkSize: 1000
+    # Overlap between chunks in characters
+    chunkOverlap: 200
+
+# OpenAI API key configuration (used for embeddings by kagent-memory)
+# This is separate from model API keys used by Kagent agents
+openai:
+  # API key (not recommended for production - use existingSecret)
+  apiKey: ""
+  # Name of existing secret containing the API key
+  existingSecret: ""
+  # Key in the secret containing the API key
+  secretKey: "KAGENT_MEMORY_OPENAI_API_KEY"
+
+# Qdrant sub-chart configuration
+# See https://github.com/qdrant/qdrant-helm for all options
+qdrant:
+  # Set to false to use external Qdrant
+  enabled: true
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Logging configuration
+logLevel: info

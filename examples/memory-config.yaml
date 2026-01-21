@@ -1,0 +1,50 @@
+# Example Memory Custom Resource for Kagent
+# This shows how to configure long-term memory using the kagent-memory service
+
+# First, create a secret with your OpenAI API key
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-secret
+  namespace: kagent
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "sk-your-api-key-here"
+
+# Example: Using kagent-memory with embedded Qdrant
+# This configuration deploys kagent-memory with its own Qdrant instance
+---
+# Deploy with: helm install kagent-memory ./helm/kagent-memory -n kagent -f examples/memory-config.yaml
+
+# values.yaml override for embedded Qdrant:
+# replicaCount: 1
+# memory:
+#   qdrant:
+#     collectionName: "my-agent-memories"
+#     topK: 5
+#     scoreThreshold: 0.75
+#   embedding:
+#     model: "text-embedding-3-small"
+#     dimensions: 1536
+#   chunking:
+#     chunkSize: 800
+#     chunkOverlap: 150
+# openai:
+#   existingSecret: "openai-secret"
+#   secretKey: "OPENAI_API_KEY"
+# qdrant:
+#   enabled: true
+#   persistence:
+#     enabled: true
+#     size: 20Gi
+
+# Example: Using kagent-memory with external Qdrant
+---
+# values.yaml override for external Qdrant:
+# memory:
+#   qdrant:
+#     url: "http://my-qdrant-cluster.qdrant.svc.cluster.local:6333"
+#     collectionName: "kagent-memories"
+# qdrant:
+#   enabled: false
