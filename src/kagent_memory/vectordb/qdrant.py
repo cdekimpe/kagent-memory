@@ -2,7 +2,8 @@
 
 import logging
 import uuid
-from typing import Any, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, cast
 
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as qdrant_models
