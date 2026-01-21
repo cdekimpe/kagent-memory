@@ -2,7 +2,7 @@
 
 import logging
 import uuid
-from typing import Any
+from typing import Any, Sequence, cast
 
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http import models as qdrant_models
@@ -11,6 +11,17 @@ from qdrant_client.http.exceptions import UnexpectedResponse
 from kagent_memory.vectordb.base import VectorStore
 
 logger = logging.getLogger(__name__)
+
+# Type alias for filter conditions
+FilterCondition = (
+    qdrant_models.FieldCondition
+    | qdrant_models.IsEmptyCondition
+    | qdrant_models.IsNullCondition
+    | qdrant_models.HasIdCondition
+    | qdrant_models.HasVectorCondition
+    | qdrant_models.NestedCondition
+    | qdrant_models.Filter
+)
 
 
 class QdrantVectorStore(VectorStore):
@@ -130,7 +141,7 @@ class QdrantVectorStore(VectorStore):
         # Build filter if provided
         qdrant_filter = None
         if filters:
-            conditions = []
+            conditions: list[FilterCondition] = []
             for key, value in filters.items():
                 if value is not None:
                     conditions.append(
@@ -143,9 +154,9 @@ class QdrantVectorStore(VectorStore):
                 qdrant_filter = qdrant_models.Filter(must=conditions)
 
         logger.debug(f"Searching {self.collection_name} with top_k={top_k}, filter={filters}")
-        results = await self._client.search(
+        results = await self._client.query_points(
             collection_name=self.collection_name,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
             query_filter=qdrant_filter,
             score_threshold=score_threshold,
@@ -154,11 +165,11 @@ class QdrantVectorStore(VectorStore):
         return [
             {
                 "id": str(r.id),
-                "score": r.score,
+                "score": r.score if r.score is not None else 0.0,
                 "content": r.payload.get("content", "") if r.payload else "",
                 "metadata": {k: v for k, v in (r.payload or {}).items() if k != "content"},
             }
-            for r in results
+            for r in results.points
         ]
 
     async def delete(
@@ -177,14 +188,16 @@ class QdrantVectorStore(VectorStore):
         """
         if ids:
             logger.debug(f"Deleting {len(ids)} points by ID from {self.collection_name}")
+            # Cast to the expected type for PointIdsList
+            point_ids: Sequence[int | str] = cast(Sequence[int | str], ids)
             await self._client.delete(
                 collection_name=self.collection_name,
-                points_selector=qdrant_models.PointIdsList(points=ids),
+                points_selector=qdrant_models.PointIdsList(points=point_ids),
             )
             return len(ids)
         elif filters:
             # Build filter conditions
-            conditions = []
+            conditions: list[FilterCondition] = []
             for key, value in filters.items():
                 if value is not None:
                     conditions.append(

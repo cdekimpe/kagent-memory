@@ -1,7 +1,7 @@
 """OpenAI embedding provider implementation."""
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 from openai import AsyncOpenAI
 
@@ -57,7 +57,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
             return []
 
         # Build request kwargs
-        kwargs: dict = {
+        kwargs: dict[str, Any] = {
             "model": self.model,
             "input": texts,
         }
